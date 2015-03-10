@@ -7,6 +7,7 @@ import requests
 import textwrap
 import pwned_console_config
 
+from time import sleep
 from pypwned import *
 
 def banner():
@@ -53,12 +54,12 @@ Breach Verified    | {6:1}
 -----------------------------------------------------------
 < Breach Details >    
 -----------------------------------------------------------
-{6:1}
+{7:1}
 -----------------------------------------------------------
 -----------------------------------------------------------
 < Breach Data Types >
 -----------------------------------------------------------
-{7:1}
+{8:1}
 -----------------------------------------------------------
 ===========================================================
     """.format(title,org,domain,date,sys_date,count,verif,descrip, '| ' + '\n| '.join(data).upper())
@@ -79,11 +80,12 @@ def json_parser(query_text):
 
 def all_breaches_account(account):
     api_query = getAllBreachesForAccount(email=account)
-    json_processor = json_parser(api_query[0])
-    print json_processor
-    
-    raw_input("Press [ENTER] To Return-")
-    
+    for breach in range(0,len(api_query)):
+        json_processor = json_parser(api_query[breach])
+        print json_processor
+        raw_input("[*]Press [ENTER] To Continue-")
+    raw_input("[*]No More Records. Press [ENTER] To Return-")
+
     banner()
     breach_menu(account)
 
@@ -92,18 +94,22 @@ def all_breached_sites(account):
     for breach in range(0,len(api_query)):
         json_processor = json_parser(api_query[breach])
         print json_processor
-        raw_input("Press [ENTER] To Continue-")
-    raw_input("Completed. Press [ENTER] To Return-")
+        raw_input("[*]Press [ENTER] To Continue-")
+    raw_input("[*]No More Records. Press [ENTER] To Return-")
 
     banner()
     breach_menu(account)
 
 def single_breach(account):
     site = str(raw_input("[*]Site Name: "))
+    if "." in site:
+        site = site.split(".")[0].strip()
     api_query = getSingleBreachedSite(name=site)
-    json_processor = json_parser(api_query)
-    print json_processor
-    raw_input("Press [ENTER] To Return-")
+    for breach in range(0,len(api_query)):
+        json_processor = json_parser(api_query)
+        print json_processor
+        raw_input("[*]Press [ENTER] To Continue-")
+    raw_input("[*]No More Records. Press [ENTER] To Return-")
 
     banner()
     breach_menu(account)
@@ -114,7 +120,7 @@ def all_data(account):
     for data in api_query:
         print "| {}".format(data)
     print "=" * 30
-    raw_input("Press [ENTER] To Return-")
+    raw_input("[*]Press [ENTER] To Return-")
 
     banner()
     breach_menu(account)
@@ -133,7 +139,7 @@ def all_pastes_account(account):
             title = api_query[paste]['Title']
             date = api_query[paste]['Date']
             count = api_query[paste]['EmailCount']
-
+            url = "http://www.{}.com/{}".format(source.lower(),id)
             print '''
 =====================================
 Paste Details
@@ -143,9 +149,10 @@ Paste ID Number    | {}
 Paste Title        | {}
 Paste Date         | {}
 Paste Breach Count | {}
+Paste URL          | {}
 -------------------------------------
 =====================================
-            '''.format(source,id,title,date,count)
+            '''.format(source,id,title,date,count,url)
 
             raw_input("Press [ENTER] To Continue-")
         raw_input("Completed. Press [ENTER] To Return-")
@@ -154,7 +161,7 @@ Paste Breach Count | {}
     paste_menu(account)
 
 def breach_menu(breach_account):
-    print '[*]Account Loaded For Use: {}'.format(breach_account)
+    print '[*]Account Loaded: {}'.format(breach_account)
     print '''
 [ 1 ] | All Breaches For Account
 [ 2 ] | All Breached Sites In System
@@ -177,6 +184,7 @@ def breach_menu(breach_account):
         banner()
         master_menu(breach_account)
     else:
+        pass
         banner()
         breach_menu(breach_account)
 
@@ -195,15 +203,28 @@ def paste_menu(paste_account):
         banner()
         master_menu(paste_account)
     else:
+        pass
         banner()
         paste_menu(paste_account)
 
+def switch_account(drop_account):
+    print "[*]Current Account: ".format(drop_account)
+    new_account = raw_input('[*]Switch Loaded Account To (Or Type "back" To Return): ')
+    
+    if new_account == "back" or new_account == "Back" or new_account == "BACK":
+        banner()
+        master_menu(drop_account)
+    else: 
+        return new_account
+
 def master_menu(account):
+        
     print '[*]Account Loaded: {}'.format(account)
     print '''
 [ 1 ] | Breaches
 [ 2 ] | Pastes
-[ 3 ] | Exit
+[ 3 ] | Switch Account
+[ 4 ] | Exit
     '''
     print ''
     option = int(raw_input('Select An Option: '))
@@ -215,16 +236,34 @@ def master_menu(account):
         paste_menu(account)
     elif option == 3:
         banner()
+        account_switch = switch_account(account)
+        banner()
+        master_menu(account_switch)
+    elif option == 4:
+        banner()
         print '[*]Goodbye!'
         sys.exit()
     else:
+        pass
         banner()
         master_menu()
 
 def main():
-    loaded_account = sys.argv[1]
+    try:
+        loaded_account = sys.argv[1]
+        banner()
+        master_menu(loaded_account)
 
-    banner()
-    master_menu(loaded_account)
+    except IndexError:
+        banner()
+        print pwned_console_config.index_error_message
+        print pwned_console_config.usage_message
+        sys.exit()
 
+    except ValueError:
+        banner()
+        print pwned_console_config.value_error_message
+        sleep(.5)
+        banner()
+        main()
 main()

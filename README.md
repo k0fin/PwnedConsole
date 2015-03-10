@@ -5,6 +5,15 @@
 	PwnedConsole is a Python script designed to act as an interactive tool for querying HaveIBeenPwned? for breach data through the use of the HaveIBeenPwned? API(v2).
 	This script makes use of the PyPwned Python module, which was written to be implemented into Python code to query the HIBP? API.
 
+< Dependencies >
+
+	requests
+	pypwned
+	textwrap
+	ndg-httpsclient
+	pyasn1
+	pyOpenssl
+
 < Usage >
 
 	Using the script is easy-
