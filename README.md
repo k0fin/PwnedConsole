@@ -27,3 +27,7 @@
 
 	There are a few things I had in mind to improve the functionality of the tool. These things are currently in progress, so don't get butthurt if something doesn't work. :)
 
+< Credits >
+
+	Thanks to Troy Hunt for an awesome API to play with.
+	Thanks to Eric Fay for writing the PyPwned module.

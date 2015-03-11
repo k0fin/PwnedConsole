@@ -5,14 +5,14 @@ import sys
 import re
 import requests
 import textwrap
-import pwned_console_config
+import pc_config
 
 from time import sleep
 from pypwned import *
 
 def banner():
     os.system('clear')
-    open_banner = open(pwned_console_config.default_banner, 'r')
+    open_banner = open(pc_config.default_banner, 'r')
     for banner_line in open_banner:
         print banner_line.rstrip()
     open_banner.close()
@@ -21,7 +21,7 @@ def description_parser(descr):
     if '<' or '>' in descr:
         descr = re.sub('<.*?>', '', descr)
 
-    for tld in pwned_console_config.tld_strip_list:    
+    for tld in pc_config.tld_strip_list:    
         if tld in descr:
             descr = descr.replace(tld,'').strip()
 
@@ -65,6 +65,20 @@ Breach Verified    | {6:1}
     """.format(title,org,domain,date,sys_date,count,verif,descrip, '| ' + '\n| '.join(data).upper())
     return breach_template
 
+def check_response_paste(query):
+    if pc_config.http_not_found in query:
+        message = pc_config.http_not_found_paste
+        return message
+    else:
+        return query
+
+def check_response_breach(query):
+    if pc_config.http_not_found in query:
+        message = pc_config.http_not_found_breach
+        return message
+    else:
+        return query
+
 def json_parser(query_text):
     title = query_text['Title'].upper().strip()
     organization = query_text['Name'].strip()
@@ -79,20 +93,27 @@ def json_parser(query_text):
     return stdout_report
 
 def all_breaches_account(account):
-    api_query = getAllBreachesForAccount(email=account)
-    for breach in range(0,len(api_query)):
-        json_processor = json_parser(api_query[breach])
-        print json_processor
-        raw_input("[*]Press [ENTER] To Continue-")
-    raw_input("[*]No More Records. Press [ENTER] To Return-")
+    pwned_query = getAllBreachesForAccount(email=account)
+    web_check = check_response_breach(pwned_query)
+    if web_check == pc_config.http_not_found_breach:
+        print web_check
+        raw_input("[*]Press [ENTER] To Return-")
+        banner()
+        breach_menu(account)
+    else:
+        for breach in range(0,len(pwned_query)):
+            json_processor = json_parser(pwned_query[breach])
+            print json_processor
+            raw_input("[*]Press [ENTER] To Continue-")
+        raw_input("[*]No More Records. Press [ENTER] To Return-")
 
-    banner()
-    breach_menu(account)
+        banner()
+        breach_menu(account)
 
 def all_breached_sites(account):
-    api_query = getAllBreaches()
-    for breach in range(0,len(api_query)):
-        json_processor = json_parser(api_query[breach])
+    pwned_query = getAllBreaches()
+    for breach in range(0,len(pwned_query)):
+        json_processor = json_parser(pwned_query[breach])
         print json_processor
         raw_input("[*]Press [ENTER] To Continue-")
     raw_input("[*]No More Records. Press [ENTER] To Return-")
@@ -104,9 +125,9 @@ def single_breach(account):
     site = str(raw_input("[*]Site Name: "))
     if "." in site:
         site = site.split(".")[0].strip()
-    api_query = getSingleBreachedSite(name=site)
-    for breach in range(0,len(api_query)):
-        json_processor = json_parser(api_query)
+    pwned_query = getSingleBreachedSite(name=site)
+    for breach in range(0,len(pwned_query)):
+        json_processor = json_parser(pwned_query)
         print json_processor
         raw_input("[*]Press [ENTER] To Continue-")
     raw_input("[*]No More Records. Press [ENTER] To Return-")
@@ -115,9 +136,9 @@ def single_breach(account):
     breach_menu(account)
 
 def all_data(account):
-    api_query = getAllDataClasses()
+    pwned_query = getAllDataClasses()
     print "=" * 30
-    for data in api_query:
+    for data in pwned_query:
         print "| {}".format(data)
     print "=" * 30
     raw_input("[*]Press [ENTER] To Return-")
@@ -129,18 +150,24 @@ def all_pastes_account(account):
     if "@" not in account:
         print "[-]No email account loaded."
         raw_input("Press [ENTER] To Return-")
-
     else:
-        api_query = getAllPastesForAccount(account=account)
-        for paste in range(0,len(api_query)):
+        pwned_query = getAllPastesForAccount(account=account)
+        web_check = check_response_paste(pwned_query)
+        if web_check == pc_config.http_not_found_paste:
+            print web_check
+            raw_input("[*]Press [ENTER] To Return-")
+            banner()
+            paste_menu(account)
+        else:
+            for paste in range(0,len(pwned_query)):
             
-            source = api_query[paste]['Source']
-            id = api_query[paste]['Id']
-            title = api_query[paste]['Title']
-            date = api_query[paste]['Date']
-            count = api_query[paste]['EmailCount']
-            url = "http://www.{}.com/{}".format(source.lower(),id)
-            print '''
+                source = pwned_query[paste]['Source']
+                id = pwned_query[paste]['Id']
+                title = pwned_query[paste]['Title']
+                date = pwned_query[paste]['Date']
+                count = pwned_query[paste]['EmailCount']
+                url = "http://www.{}.com/{}".format(source.lower(),id)
+                print '''
 =====================================
 Paste Details
 -------------------------------------
@@ -152,13 +179,13 @@ Paste Breach Count | {}
 Paste URL          | {}
 -------------------------------------
 =====================================
-            '''.format(source,id,title,date,count,url)
+                '''.format(source,id,title,date,count,url)
 
-            raw_input("Press [ENTER] To Continue-")
-        raw_input("Completed. Press [ENTER] To Return-")
+                raw_input("Press [ENTER] To Continue-")
+            raw_input("Completed. Press [ENTER] To Return-")
 
-    banner()
-    paste_menu(account)
+        banner()
+        paste_menu(account)
 
 def breach_menu(breach_account):
     print '[*]Account Loaded: {}'.format(breach_account)
@@ -256,13 +283,13 @@ def main():
 
     except IndexError:
         banner()
-        print pwned_console_config.index_error_message
-        print pwned_console_config.usage_message
+        print pc_config.index_error_message
+        print pc_config.usage_message
         sys.exit()
 
     except ValueError:
         banner()
-        print pwned_console_config.value_error_message
+        print pc_config.value_error_message
         sleep(.5)
         banner()
         main()
