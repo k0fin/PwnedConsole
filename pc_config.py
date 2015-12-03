@@ -3,7 +3,7 @@
 
 # Config for banners
 #----------------------------------------------------------------------
-banners_path = '/root/pwned_console/banners/'
+banners_path = 'banners/'
 default_banner = '{}pwned_console_default.banner'.format(banners_path)
 #----------------------------------------------------------------------
 
