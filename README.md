@@ -1,3 +1,6 @@
+# IMPORTANT: This project is old as f$!# and has been deprecated for years. If you somehow ended up here to clone this ancient Python2-based HIBP project that probably won't work at all, go check out my new rewrite of it. :)
+# https://github.com/k0fin/PwnedConsoleX
+
 < PwnedConsole >
 
 < About >
